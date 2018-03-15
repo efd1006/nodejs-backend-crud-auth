@@ -36,6 +36,9 @@ app.use((req, res, next) => {
 });
 
 // Routes which should handle request
+app.get('/', (req, res, next) => {
+  res.status(200).redirect('/products');
+})
 app.use('/products', productRoutes);
 app.use('/orders', orderRoutes);
 app.use('/user', userRoutes);

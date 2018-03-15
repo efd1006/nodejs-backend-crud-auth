@@ -60,34 +60,47 @@ exports.products_get_product = (req, res, next) => {
 }
 
 exports.products_create_product = (req, res, next) => {
-  console.log(req.file.path);
-  //create new product object
-  const product = new Product({
-    name: req.body.name,
-    price: req.body.price,
-    productImage: req.file.path
-  });
-  // save it to database
-  product.save()
-  .then(result => {
-    console.log(result);
-    res.status(201).json({
-      message: 'Product Created',
-      createdProduct: {
-        _id: result._id,
-        name: result.name,
-        price: result.price,
-        request: {
-          type: 'GET',
-          url: 'http:localhost:3000/products/'+ result._id
-        }
+  // check if product already exists
+  Product.find({ name: req.body.name})
+  .exec()
+  .then(product => {
+    if(product.length >= 1) {
+      return res.status(409).json({ message: 'Product Already Exists'})
+    } else {
+      // check if valid price
+      if(req.body.price <= 0){
+        return res.status(409).json({ message: 'Product price is invalid'})
+      } else {
+        //create new product object
+        const product = new Product({
+          name: req.body.name,
+          price: req.body.price,
+          productImage: req.file.path
+        });
+        // save it to database
+        product.save()
+        .then(result => {
+          console.log(result);
+          res.status(201).json({
+            message: 'Product Created',
+            createdProduct: {
+              _id: result._id,
+              name: result.name,
+              price: result.price,
+              request: {
+                type: 'GET',
+                url: 'http:localhost:3000/products/'+ result._id
+              }
+            }
+          });
+        })
+        .catch((err) => { 
+          console.log(err);
+          res.status(500).json({error: err});
+        });
       }
-    });
+    }
   })
-  .catch((err) => { 
-    console.log(err);
-    res.status(500).json({error: err});
-  });
 }
 
 exports.products_update_product = (req, res, next) => {
